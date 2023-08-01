@@ -6,6 +6,8 @@ using relacionamentos.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AutoMapper;
+
 
 namespace relacionamentos
 {
@@ -13,9 +15,18 @@ namespace relacionamentos
     {
         public static void Main(string[] args)
         {
+
+            var configuration = new MapperConfiguration(cfg =>
+            {
+                cfg.CreateMap<ProdutoDto, Produto>();
+            });
+            
+            var mapper = new Mapper(configuration);
+
+
             using (var db = new FabricaContext())
             {
-                var fabricante = db.fabricantes.Where(f => f.Nome.Equals("kibon")).Include(p => p.produtos).ToList();
+                var fabricante = db.fabricantes.Where(f => f.Nome.Equals("bayer")).Include(p => p.produtos).ToList();
 
 
                 var jss = new JsonSerializerOptions
@@ -29,10 +40,14 @@ namespace relacionamentos
                 string res = JsonSerializer.Serialize(fabricante, jss);
                 Console.WriteLine(res);
 
-                var pd = new Produto();
-                pd.Nome = "pudim";
-                pd.Categoria = "sobremesas";
-                pd.fabricante = fabricante.Where(fb => fb.FabricanteId == 2).First();                 
+                var produtoDto = new ProdutoDto();
+                produtoDto.Nome = "bypulgas";
+                produtoDto.Categoria = "veneno";
+                produtoDto.FabricanteId = 2;
+                produtoDto.fabricante = db.fabricantes.Where(f => f.Nome.Equals("bayer")).FirstOrDefault();
+
+                
+                var pd = mapper.Map<Produto>(produtoDto);
                 db.produtos.Add(pd);
                 db.SaveChanges();
 
